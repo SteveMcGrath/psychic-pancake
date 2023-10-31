@@ -172,7 +172,7 @@ def file_walker(pobj: Path,
 
 
 @app.command()
-def uploader(path: Path,
+def uploader(paths: List[Path],
              cloudflare_token: str = typer.Option(
                 help='Cloudflare authorization token',
                 envvar='CLOUDFLARE_AUTH_TOKEN',
@@ -197,11 +197,13 @@ def uploader(path: Path,
     # Set the logging level.
     logging.basicConfig(level=(verbose * 10) - 40)
 
-    # Walk the path specified and attempt to upload any files within it.
-    file_log = file_walker(pobj=path,
-                           cf_id=cloudflare_id,
-                           cf_token=cloudflare_token
-                           )
+    # Walk the paths specified and attempt to upload any files within it.
+    file_log = []
+    for path in paths:
+        file_log += file_walker(pobj=path,
+                               cf_id=cloudflare_id,
+                               cf_token=cloudflare_token
+                               )
 
     # If a report file was defined, then we will write the responses to it.
     if report:
