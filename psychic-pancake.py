@@ -7,6 +7,7 @@ from pathlib import Path
 from csv import DictWriter
 import logging
 from PIL import Image
+import requests
 import typer
 
 
@@ -80,7 +81,7 @@ def image_checker(path: Path,
     # Check to see if the image exceed the maximal size in either dimension for
     # the the image.  If it does, then log the warning and return false to
     # the caller.
-    if image.width > max_dim or image.height > max_dim:
+    if img.width > max_dim or img.height > max_dim:
         logger.warn(f'CHECK-FAIL: {path} exceeds dimensional limits')
         return False
 
@@ -103,7 +104,7 @@ def upload_to_cloudflare(image: Path, cf_id: str, cf_token: str) -> dict:
     """
 
     # Upload the image to the Cloudflare account
-    url = f'https://api.Cloudflare.com/client/v4/accounts/{cfid}/images/v1'
+    url = f'https://api.Cloudflare.com/client/v4/accounts/{cf_id}/images/v1'
     resp = requests.post(url=url,
                          headers={'Authorization': f'Bearer {cf_token}'},
                          files={'file': (image.stem, image.open('rb'))}
@@ -181,12 +182,14 @@ def uploader(paths: List[Path],
                 help='Cloudflare id',
                 envvar='CLOUDFLARE_ID'
              ),
-             report: Optional[Path] = typer.Option(None,
+             report: Optional[Path] = typer.Option(
+                None,
                 help='CSV report filename',
              ),
-             verbose: int = typer.Option(0,
-                help='Log verbosity level'
+             verbose: int = typer.Option(
+                0,
                 '--verbose', '-v',
+                help='Log verbosity level',
                 count=True,
                 max=4
             ),
@@ -201,9 +204,9 @@ def uploader(paths: List[Path],
     file_log = []
     for path in paths:
         file_log += file_walker(pobj=path,
-                               cf_id=cloudflare_id,
-                               cf_token=cloudflare_token
-                               )
+                                cf_id=cloudflare_id,
+                                cf_token=cloudflare_token
+                                )
 
     # If a report file was defined, then we will write the responses to it.
     if report:
